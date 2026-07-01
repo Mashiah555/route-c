@@ -28,14 +28,14 @@ function getAttendedPenalty(dates) {
 function isValidAbsence(targetDate, attendedDates, r1, r2, r3) {
     if (r1) {
         for (let d of attendedDates) {
-            if (getWorkingDaysDiff(targetDate, d) === 0) return { valid: true, reason: 'בחינה נוספת מתקיימת באותו היום.' };
+            if (getWorkingDaysDiff(targetDate, d) === 0) return { valid: true, reason: 'התנגשות עם בחינה אחרת' };
         }
     }
     if (r2 && attendedDates.length >= 2) {
         for (let i = 0; i < attendedDates.length; i++) {
             for (let j = i + 1; j < attendedDates.length; j++) {
                 let dates = [targetDate, attendedDates[i], attendedDates[j]].sort((a, b) => a - b);
-                if (getWorkingDaysDiff(dates[0], dates[2]) <= 2) return { valid: true, reason: 'עומס של 3 בחינות ב-3 ימי עבודה רצופים.' };
+                if (getWorkingDaysDiff(dates[0], dates[2]) <= 2) return { valid: true, reason: '3 בחינות ברצף' };
             }
         }
     }
@@ -44,7 +44,7 @@ function isValidAbsence(targetDate, attendedDates, r1, r2, r3) {
             for (let j = i + 1; j < attendedDates.length; j++) {
                 for (let k = j + 1; k < attendedDates.length; k++) {
                     let dates = [targetDate, attendedDates[i], attendedDates[j], attendedDates[k]].sort((a, b) => a - b);
-                    if (getWorkingDaysDiff(dates[0], dates[3]) <= 6) return { valid: true, reason: 'עומס של 4 בחינות ב-7 ימי עבודה.' };
+                    if (getWorkingDaysDiff(dates[0], dates[3]) <= 6) return { valid: true, reason: '4 בחינות בשבוע' };
                 }
             }
         }
@@ -52,7 +52,7 @@ function isValidAbsence(targetDate, attendedDates, r1, r2, r3) {
     return { valid: false };
 }
 
-// מחולל מכפלה קרטזית לבניית הקומבינציות הדינמיות
+// Cartesic Product Generator for dynamic combinations
 function cartesianProduct(arr) {
     return arr.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]]);
 }
@@ -63,7 +63,7 @@ function calculateEngine(exams, settings) {
     let bestSchedule = null;
     let bestScore = -Infinity;
 
-    // בניית האפשרויות המותרות לכל קורס (כולל אילוצי חובה)
+    // Map all valid options for each course (including manual forces)
     const coursesOptions = exams.map(exam => {
         let opts = [];
         // 0 = A+B, 1 = A+C (Miss B), 2 = Miss A (B+C)

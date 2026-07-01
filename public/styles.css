@@ -35,7 +35,7 @@ body {
     padding-bottom: 8px;
 }
 
-/* אלמנטים מתכווצים */
+/* Collapsable Elements */
 .collapsible-section {
     background-color: var(--cell-bg);
     border-radius: 8px;
@@ -57,7 +57,7 @@ body {
     gap: 15px;
 }
 
-/* טפסים */
+/* Forms */
 .control-group {
     display: flex;
     flex-direction: column;
@@ -106,7 +106,7 @@ input[type="range"] {
     font-size: 0.9rem;
 }
 
-/* כפתורים */
+/* Buttons */
 .btn-primary {
     background-color: var(--primary-blue);
     color: white;
@@ -151,7 +151,7 @@ input[type="range"] {
     gap: 10px;
 }
 
-/* רשימת קורסים */
+/* Courses List */
 .course-list {
     display: flex;
     flex-direction: column;
@@ -193,7 +193,7 @@ input[type="range"] {
     font-size: 1.1rem;
 }
 
-/* חלון קופץ (Modal) */
+/* Popup Modal */
 .modal {
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -234,7 +234,7 @@ input[type="range"] {
     color: var(--text-main);
 }
 
-/* תוכן ראשי וטבלה */
+/* Dashboard Contents */
 .main-content {
     flex: 1;
     padding: 40px;
@@ -307,7 +307,7 @@ tr:hover {
     color: var(--error);
 }
 
-/* יומן */
+/* Calendar */
 .calendar-wrapper {
     display: flex;
     flex-direction: column;
@@ -382,10 +382,9 @@ tr:hover {
     border-right: 3px solid var(--accent-rose);
 }
 
-/* עיצוב למבחנים שנעדרים מהם */
 .exam-event.skipped {
     background-color: transparent;
-    border-right: 3px dashed var(--text-muted);
+    border-right: 3px solid var(--text-muted);
     color: var(--text-muted);
     text-decoration: line-through;
     opacity: 0.6;

@@ -1,4 +1,4 @@
-// מערך נתוני הבחינות כברירת מחדל
+// Default exams data
 const DEFAULT_EXAMS = [
     { id: 'OS', name: 'מערכות הפעלה', a: '2026-07-01', b: '2026-08-06', forceA: false, forceB: false },
     { id: 'Automata', name: 'אוטומטים', a: '2026-07-09', b: '2026-08-10', forceA: false, forceB: false },

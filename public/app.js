@@ -1,19 +1,19 @@
 let currentExams = [];
 let currentBestSchedule = null;
 
-// --- ניהול ערכת נושא (Theme) ---
+// --- Theme Handling ---
 function setTheme(mode) {
     document.documentElement.style.colorScheme = (mode === 'auto') ? 'light dark' : mode;
     localStorage.setItem('themePref', mode);
 }
 
-// טעינת ערכת נושא בהפעלה
+// Theme initiation at startup
 const savedTheme = localStorage.getItem('themePref') || 'auto';
 document.getElementById('themeToggle').value = savedTheme;
 setTheme(savedTheme);
 
 
-// --- ניהול החלון הקופץ (Modal) ---
+// --- Modal Handling ---
 const courseModal = document.getElementById('courseModal');
 
 function openCourseModal() {
@@ -28,7 +28,7 @@ function closeCourseModal() {
     courseModal.close();
 }
 
-// --- ניהול קורסים (CRUD) ---
+// --- Courses Handling (CRUD) ---
 function handleCourseSubmit(e) {
     e.preventDefault();
     const idField = document.getElementById('editCourseId').value;
@@ -112,7 +112,7 @@ function updateCourseListUI() {
     });
 }
 
-// --- אינטגרציה עם מנוע האופטימיזציה ---
+// --- Integration with the optimization Engine ---
 function runOptimization() {
     if (currentExams.length === 0) {
         document.getElementById('resultsBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">הוסף קורסים כדי לראות תוצאות</td></tr>';
@@ -166,7 +166,7 @@ function renderScheduleTable(schedule) {
     });
 }
 
-// --- יומן דינמי כולל מבחנים שנעדרים מהם ---
+// --- Dynamic Calendar (includes skipped exams)
 function renderDynamicCalendar(schedule) {
     const container = document.getElementById('calendarContainer');
     container.innerHTML = '';
@@ -177,7 +177,7 @@ function renderDynamicCalendar(schedule) {
     const events = {};
 
     schedule.forEach(item => {
-        // מועד א' - הוספה בכל מקרה
+        // Moed A - Includes all
         let dA = new Date(item.course.a);
         if (dA < minDate) minDate = dA;
         if (dA > maxDate) maxDate = dA;
@@ -192,7 +192,7 @@ function renderDynamicCalendar(schedule) {
             attended: isAttendedA
         });
 
-        // מועד ב' - הוספה בכל מקרה
+        // Moed B - Includes all
         let dB = new Date(item.course.b);
         if (dB < minDate) minDate = dB;
         if (dB > maxDate) maxDate = dB;
@@ -266,7 +266,7 @@ function renderDynamicCalendar(schedule) {
                 let hasAttended = false;
                 events[dateStr].forEach(ev => {
                     const evDiv = document.createElement('div');
-                    // אם המבחן הוגדר ככזה שלא ניגשים אליו, נוסיף לו את המחלקה skipped
+                    // Add 'skipped' class for exams defined as skipped
                     let skippedClass = ev.attended ? '' : 'skipped';
                     evDiv.className = `exam-event ${ev.type} ${skippedClass}`;
                     evDiv.innerText = `${ev.name} (${ev.label})`;
@@ -275,7 +275,6 @@ function renderDynamicCalendar(schedule) {
                     if (ev.attended) hasAttended = true;
                 });
 
-                // צובעים את מסגרת היום רק אם יש בו לפחות בחינה אחת שניגשים אליה
                 if (hasAttended) {
                     cell.style.borderColor = 'rgba(65, 105, 225, 0.4)';
                 }
@@ -294,7 +293,7 @@ function renderDynamicCalendar(schedule) {
     }
 }
 
-// --- ייצוא ליומן ---
+// --- Calendar Export ---
 function exportICS() {
     if (!currentBestSchedule) return;
     let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Optimal Exam Scheduler//IL\n";
