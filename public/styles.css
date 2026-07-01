@@ -1,0 +1,392 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 340px;
+    background-color: var(--panel-bg);
+    border-left: 1px solid var(--border-color);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.sidebar h2 {
+    margin: 0;
+    color: var(--primary-blue);
+    font-size: 1.2rem;
+}
+
+.sidebar h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+/* אלמנטים מתכווצים */
+.collapsible-section {
+    background-color: var(--cell-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+}
+
+.collapsible-section summary {
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--primary-blue);
+    outline: none;
+}
+
+.collapsible-content {
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* טפסים */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.control-group .small-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.val-display {
+    color: var(--primary-blue);
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="range"] {
+    accent-color: var(--primary-blue);
+    width: 100%;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+/* כפתורים */
+.btn-primary {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex: 1;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+.btn-secondary {
+    background-color: var(--cell-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color);
+}
+
+.btn-export {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: auto;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* רשימת קורסים */
+.course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 20px;
+}
+
+.course-item {
+    background-color: var(--cell-bg);
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+}
+
+.course-info .dates {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.course-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.course-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+/* חלון קופץ (Modal) */
+.modal {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--panel-bg);
+    color: var(--text-main);
+    padding: 24px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--primary-blue);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    color: var(--text-main);
+}
+
+/* תוכן ראשי וטבלה */
+.main-content {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 30px;
+}
+
+.header h1 {
+    margin: 0 0 10px 0;
+    font-size: 2rem;
+    font-weight: 300;
+}
+
+.results-container {
+    background-color: var(--panel-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 14px 16px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+th {
+    color: var(--primary-blue);
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+tr:hover {
+    background-color: var(--row-hover);
+}
+
+.badge-attend {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.badge-absence {
+    color: var(--accent-rose);
+    font-weight: 600;
+}
+
+.reasoning {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.icon-check {
+    color: var(--success);
+}
+
+.icon-cross {
+    color: var(--error);
+}
+
+/* יומן */
+.calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.month-container {
+    width: 100%;
+    max-width: 800px;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.month-title {
+    text-align: center;
+    color: var(--primary-blue);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.day-header {
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-muted);
+    padding-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.day-cell {
+    background-color: var(--cell-bg);
+    border-radius: 6px;
+    min-height: 80px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid transparent;
+}
+
+.day-cell.empty {
+    background-color: transparent;
+    border: none;
+}
+
+.day-number {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.exam-event {
+    background-color: rgba(65, 105, 225, 0.2);
+    border-right: 3px solid var(--primary-blue);
+    color: var(--text-main);
+    font-size: 0.75rem;
+    padding: 4px 6px;
+    border-radius: 4px;
+    line-height: 1.3;
+}
+
+.exam-event.moed-b {
+    background-color: rgba(216, 27, 96, 0.15);
+    border-right: 3px solid var(--accent-rose);
+}
+
+/* עיצוב למבחנים שנעדרים מהם */
+.exam-event.skipped {
+    background-color: transparent;
+    border-right: 3px dashed var(--text-muted);
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.6;
+}

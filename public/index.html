@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מתזמן בחינות אופטימלי - פרו</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <h2>ניהול ותזמון</h2>
+
+        <div class="control-group">
+            <label>מצב תצוגה</label>
+            <select id="themeToggle" onchange="setTheme(this.value)">
+                <option value="auto">אוטומטי (לפי המערכת)</option>
+                <option value="light">בהיר ☀️</option>
+                <option value="dark">כהה 🌙</option>
+            </select>
+        </div>
+
+        <!-- הגדרות מנוע (ניתן לכיווץ) -->
+        <details class="collapsible-section">
+            <summary>הגדרות מנוע האופטימיזציה</summary>
+            <div class="collapsible-content">
+                <div class="control-group">
+                    <label>אסטרטגיית אופטימיזציה</label>
+                    <select id="strategy" onchange="runOptimization()">
+                        <option value="spacing">תעדוף ריווח מקסימלי (ימים ריקים)</option>
+                        <option value="max_c">תעדוף מקסימום מועדי ג' אפשריים</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>חוקי היעדרות</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule1" checked
+                            onchange="runOptimization()"> חוק 1: חפיפה באותו יום</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule2" checked
+                            onchange="runOptimization()"> חוק 2: 3 מבחנים ברצף (ללא שבת)</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule3" checked
+                            onchange="runOptimization()"> חוק 3: 4 מבחנים ב-7 ימים</label>
+                </div>
+
+                <div class="control-group">
+                    <label>מקסימום מועדי ג': <span id="maxVal" class="val-display">10</span></label>
+                    <input type="range" id="maxC" min="0" max="10" value="10"
+                        oninput="document.getElementById('maxVal').innerText = this.value; runOptimization();">
+
+                    <label>מינימום מועדי ג': <span id="minVal" class="val-display">0</span></label>
+                    <input type="range" id="minC" min="0" max="10" value="0"
+                        oninput="document.getElementById('minVal').innerText = this.value; runOptimization();">
+                </div>
+            </div>
+        </details>
+
+        <!-- ניהול קורסים -->
+        <div class="course-management">
+            <h3>הקורסים שלי</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="btn-primary" onclick="openCourseModal()">+ קורס חדש</button>
+                <button class="btn-secondary" onclick="loadDefaults()">טען ברירת מחדל</button>
+            </div>
+
+            <div id="courseList" class="course-list">
+                <!-- רשימת הקורסים תוזרק לכאן ותיגלל כחלק מהתפריט כולו -->
+            </div>
+        </div>
+
+        <button class="btn-export" onclick="exportICS()">ייצוא ליומן (iCal)</button>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>ניתוח עומס בחינות דינמי</h1>
+            <p>הוסף קורסים כדי שהמנוע יחשב עבורך את הסידור האופטימלי ביותר. היומן והטבלה יתעדכנו אוטומטית.</p>
+        </div>
+
+        <div class="results-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>קורס</th>
+                        <th style="width: 30%">מועד א'</th>
+                        <th style="width: 30%">מועד ב'</th>
+                        <th style="text-align: center;">מועד ג'</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <tr>
+                        <td colspan="4" style="text-align:center;">הוסף קורסים כדי לראות תוצאות</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="calendarContainer" class="calendar-wrapper">
+            <!-- יומן דינמי יוזרק לכאן -->
+        </div>
+    </main>
+
+    <!-- חלון קופץ (Modal) להוספת/עריכת קורס -->
+    <dialog id="courseModal" class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">פרטי קורס</h3>
+            <button class="btn-close" onclick="closeCourseModal()">&times;</button>
+        </div>
+        <form id="courseForm" onsubmit="handleCourseSubmit(event)">
+            <input type="hidden" id="editCourseId">
+            <div class="control-group">
+                <input type="text" id="courseName" placeholder="שם הקורס" required>
+
+                <label class="small-label">תאריך מועד א'</label>
+                <input type="date" id="courseDateA" required>
+                <label class="checkbox-label small-label"><input type="checkbox" id="forceA"> חובה לגשת למועד א'</label>
+
+                <label class="small-label" style="margin-top: 8px;">תאריך מועד ב'</label>
+                <input type="date" id="courseDateB" required>
+                <label class="checkbox-label small-label"><input type="checkbox" id="forceB"> חובה לגשת למועד ב'</label>
+            </div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="submit" id="btnSubmitCourse" class="btn-primary">שמור קורס</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="defaults.js"></script>
+    <script src="engine.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
