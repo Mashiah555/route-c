@@ -448,5 +448,17 @@ function generateICSEvent(title, dateObj) {
     return `BEGIN:VEVENT\nSUMMARY:${title}\nDTSTART;VALUE=DATE:${dateStr}\nDTEND;VALUE=DATE:${dateStr}\nEND:VEVENT\n`;
 }
 
-// --- Load up the system at startup ---
+// --- Sidebar Managment (Collapsion & Expansion)
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-closed', sidebar.classList.contains('collapsed'));
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+}
+
+// --- Load up the sidebar at startup ---
+if (localStorage.getItem('sidebarCollapsed') === 'true') {
+    document.querySelector('.sidebar').classList.add('collapsed');
+    document.body.classList.add('sidebar-closed');
+}
 initStorage();

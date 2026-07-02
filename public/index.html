@@ -11,15 +11,33 @@
 
 <body>
 
+    <button id="floatingToggle" class="floating-toggle-btn" onclick="toggleSidebar()" title="הצג תפריט צד">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
     <aside class="sidebar">
-        <h2>ניהול ותזמון</h2>
+        <div class="sidebar-header-row">
+            <h2>ניהול ותזמון</h2>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()" title="הסתר תפריט צד">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="13 17 18 12 13 7"></polyline>
+                    <polyline points="6 17 11 12 6 7"></polyline>
+                </svg>
+            </button>
+        </div>
 
         <details class="collapsible-section">
             <summary>הגדרות מנוע האופטימיזציה</summary>
             <div class="collapsible-content">
                 <div class="control-group">
                     <label>אסטרטגיית אופטימיזציה</label>
-                    <select id="strategy" onchange="runOptimization()">
+                    <select id="strategy" onchange="runOptimization()" style="cursor: pointer;">
                         <option value="spacing">תעדוף ריווח בין בחינות</option>
                         <option value="max_c">תעדוף מקסימום מועדי ג'</option>
                     </select>
@@ -37,11 +55,11 @@
 
                 <div class="control-group">
                     <label>מקסימום מועדי ג': <span id="maxVal" class="val-display">10</span></label>
-                    <input type="range" id="maxC" min="0" max="10" value="10"
+                    <input style="cursor: pointer;" type="range" id="maxC" min="0" max="10" value="10"
                         oninput="document.getElementById('maxVal').innerText = this.value; runOptimization();">
 
                     <label>מינימום מועדי ג': <span id="minVal" class="val-display">0</span></label>
-                    <input type="range" id="minC" min="0" max="10" value="0"
+                    <input style="cursor: pointer;" type="range" id="minC" min="0" max="10" value="0"
                         oninput="document.getElementById('minVal').innerText = this.value; runOptimization();">
                 </div>
             </div>
@@ -51,7 +69,7 @@
             style="background-color: var(--cell-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
             <div class="control-group">
                 <label>סמסטר פעיל</label>
-                <select id="profileSelect" onchange="switchProfile(this.value)"></select>
+                <select id="profileSelect" onchange="switchProfile(this.value)" style="cursor: pointer;"></select>
             </div>
             <div class="form-actions" style="margin-top: 10px;">
                 <button class="btn-primary" onclick="promptNewProfile()" style="font-size: 0.85rem;">+ סמסטר
@@ -76,7 +94,7 @@
 
         <div class="control-group" style="margin-top: 15px;">
             <label class="small-label">מצב תצוגה</label>
-            <select id="themeToggle" onchange="setTheme(this.value)" style="padding: 6px;">
+            <select id="themeToggle" onchange="setTheme(this.value)" style="cursor: pointer; padding: 6px;">
                 <option value="auto">אוטומטי (לפי המערכת)</option>
                 <option value="light">בהיר ☀️</option>
                 <option value="dark">כהה 🌙</option>
@@ -86,8 +104,11 @@
 
     <main class="main-content">
         <div class="header">
-            <h1>ניתוח עומס בחינות דינמי</h1>
-            <p>המידע שלך נשמר אוטומטית בדפדפן וזמין רק לך. הוסף קורסים כדי לחשב את הסידור האופטימלי.</p>
+            <h1 style="margin-top: 0; margin-bottom: 5px;">ניתוח עומס בחינות דינמי</h1>
+            <p style="margin: 0; color: var(--text-muted); text-align: center;">המידע שלך נשמר אוטומטית בדפדפן וזמין רק
+                לך. הוסף קורסים כדי
+                לחשב את
+                הסידור האופטימלי.</p>
         </div>
 
         <div class="results-container">
