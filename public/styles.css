@@ -9,7 +9,7 @@ body {
 }
 
 .sidebar {
-    width: 340px;
+    width: 300px;
     background-color: var(--panel-bg);
     border-left: 1px solid var(--border-color);
     padding: 24px;
@@ -156,7 +156,6 @@ input[type="range"] {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-bottom: 20px;
 }
 
 .course-item {
@@ -312,6 +311,7 @@ tr:hover {
     display: flex;
     flex-direction: column;
     gap: 30px;
+    flex-shrink: 0;
 }
 
 .month-container {

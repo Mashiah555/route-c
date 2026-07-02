@@ -14,33 +14,23 @@
     <aside class="sidebar">
         <h2>ניהול ותזמון</h2>
 
-        <div class="control-group">
-            <label>מצב תצוגה</label>
-            <select id="themeToggle" onchange="setTheme(this.value)">
-                <option value="auto">אוטומטי (לפי המערכת)</option>
-                <option value="light">בהיר ☀️</option>
-                <option value="dark">כהה 🌙</option>
-            </select>
-        </div>
-
-        <!-- Engine Algorithm Configuration -->
         <details class="collapsible-section">
             <summary>הגדרות מנוע האופטימיזציה</summary>
             <div class="collapsible-content">
                 <div class="control-group">
                     <label>אסטרטגיית אופטימיזציה</label>
                     <select id="strategy" onchange="runOptimization()">
-                        <option value="spacing">תעדוף ריווח מקסימלי (ימים ריקים)</option>
-                        <option value="max_c">תעדוף מקסימום מועדי ג' אפשריים</option>
+                        <option value="spacing">תעדוף ריווח בין בחינות</option>
+                        <option value="max_c">תעדוף מקסימום מועדי ג'</option>
                     </select>
                 </div>
 
                 <div class="control-group">
                     <label>חוקי היעדרות</label>
                     <label class="checkbox-label"><input type="checkbox" id="rule1" checked
-                            onchange="runOptimization()"> התנגשות בחינות באותו יום</label>
+                            onchange="runOptimization()"> התנגשות של בחינות באותו יום</label>
                     <label class="checkbox-label"><input type="checkbox" id="rule2" checked
-                            onchange="runOptimization()"> 3 בחינות ברצף (לא כולל שבת)</label>
+                            onchange="runOptimization()"> 3 בחינות ברצף (ללא שבתות)</label>
                     <label class="checkbox-label"><input type="checkbox" id="rule3" checked
                             onchange="runOptimization()"> 4 בחינות בשבוע</label>
                 </div>
@@ -57,7 +47,20 @@
             </div>
         </details>
 
-        <!-- Courses Managment-->
+        <div
+            style="background-color: var(--cell-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="control-group">
+                <label>סמסטר פעיל</label>
+                <select id="profileSelect" onchange="switchProfile(this.value)"></select>
+            </div>
+            <div class="form-actions" style="margin-top: 10px;">
+                <button class="btn-primary" onclick="promptNewProfile()" style="font-size: 0.85rem;">+ סמסטר
+                    חדש</button>
+                <button class="btn-secondary" onclick="deleteCurrentProfile()"
+                    style="font-size: 0.85rem; color: var(--accent-rose);">מחק</button>
+            </div>
+        </div>
+
         <div class="course-management">
             <h3>הקורסים שלי</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -66,17 +69,25 @@
             </div>
 
             <div id="courseList" class="course-list">
-                <!-- Courses list to be inject here -->
             </div>
         </div>
 
         <button class="btn-export" onclick="exportICS()">ייצוא ליומן</button>
+
+        <div class="control-group" style="margin-top: 15px;">
+            <label class="small-label">מצב תצוגה</label>
+            <select id="themeToggle" onchange="setTheme(this.value)" style="padding: 6px;">
+                <option value="auto">אוטומטי (לפי המערכת)</option>
+                <option value="light">בהיר ☀️</option>
+                <option value="dark">כהה 🌙</option>
+            </select>
+        </div>
     </aside>
 
     <main class="main-content">
         <div class="header">
             <h1>ניתוח עומס בחינות דינמי</h1>
-            <p>הוסף קורסים כדי שהמנוע יחשב עבורך את הסידור האופטימלי ביותר. היומן והטבלה יתעדכנו אוטומטית.</p>
+            <p>המידע שלך נשמר אוטומטית בדפדפן וזמין רק לך. הוסף קורסים כדי לחשב את הסידור האופטימלי.</p>
         </div>
 
         <div class="results-container">
@@ -98,11 +109,9 @@
         </div>
 
         <div id="calendarContainer" class="calendar-wrapper">
-            <!-- Dynamic calendar to be injected here -->
         </div>
     </main>
 
-    <!-- Popup Modal to Add/Edit a Course -->
     <dialog id="courseModal" class="modal">
         <div class="modal-header">
             <h3 id="modalTitle">פרטי קורס</h3>
