@@ -98,7 +98,6 @@ function calculateEngine(exams, settings) {
         else if (exam.forceB) opts.push(0, 2);
         else {
             opts.push(0, 1, 2);
-            // אם אפשרנו דילוג כפול, נוסיף את אופציה 4
             if (settings.allowDoubleSkip) opts.push(4);
         }
         return opts;
@@ -133,7 +132,7 @@ function calculateEngine(exams, settings) {
             } else if (opt === 3) {
                 attendedA.push(timeA);
             } else if (opt === 4) {
-                // דילוג כפול - שני המועדים דורשים הצדקה מול המבחנים הנותרים בסמסטר
+                // Double exam skip 
                 missedA.push({ date: timeA, id: exams[j].id });
                 missedB.push({ date: timeB, id: exams[j].id });
                 cCount++;
@@ -146,7 +145,8 @@ function calculateEngine(exams, settings) {
         if (cCount > settings.maxC || cCount < settings.minC) continue;
 
         let isValid = true;
-        // אימות כל ההיעדרויות ממועד א' (כולל את אופציות 2 ו-4)
+
+        // Validate all moed A absences 
         for (let miss of missedA) {
             let check = isValidAbsence(miss.date, attendedA, settings.rule1, settings.rule2, settings.rule3);
             if (!check.valid) { isValid = false; break; }
@@ -154,7 +154,7 @@ function calculateEngine(exams, settings) {
         }
 
         if (isValid) {
-            // אימות כל ההיעדרויות ממועד ב' (כולל את אופציות 1 ו-4)
+            // Validate all moed B absences
             for (let miss of missedB) {
                 let check = isValidAbsence(miss.date, attendedB, settings.rule1, settings.rule2, settings.rule3);
                 if (!check.valid) { isValid = false; break; }
