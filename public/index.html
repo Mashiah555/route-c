@@ -33,9 +33,18 @@
             </button>
         </div>
 
+        <div
+            style="background-color: var(--cell-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="control-group">
+                <label>סמסטר פעיל</label>
+                <select id="profileSelect" onchange="switchProfile(this.value)" style="cursor: pointer;"></select>
+            </div>
+        </div>
+
         <details class="collapsible-section">
             <summary>הגדרות מנוע האופטימיזציה</summary>
             <div class="collapsible-content">
+
                 <div class="control-group">
                     <label>אסטרטגיית אופטימיזציה</label>
                     <select id="strategy" onchange="runOptimization()" style="cursor: pointer;">
@@ -45,13 +54,23 @@
                 </div>
 
                 <div class="control-group">
+                    <label>שיקולי מועד ג'</label>
+                    <label class="checkbox-label"><input type="checkbox" id="prioritizeCloseC" checked
+                            onchange="runOptimization()" style="cursor: pointer;">
+                        תעדוף מועדי ג' קרובים</label>
+                    <label class="checkbox-label"><input type="checkbox" id="allowDoubleSkip"
+                            onchange="runOptimization()" style="cursor: pointer;"> אפשר היעדרות
+                        כפולה (דילוג מוצדק לשני המועדים)</label>
+                </div>
+
+                <div class="control-group">
                     <label>חוקי היעדרות</label>
-                    <label class="checkbox-label"><input type="checkbox" id="rule1" checked
-                            onchange="runOptimization()"> התנגשות של בחינות באותו יום</label>
-                    <label class="checkbox-label"><input type="checkbox" id="rule2" checked
-                            onchange="runOptimization()"> 3 בחינות ברצף (ללא שבתות)</label>
-                    <label class="checkbox-label"><input type="checkbox" id="rule3" checked
-                            onchange="runOptimization()"> 4 בחינות בשבוע</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule1" checked onchange="runOptimization()"
+                            style="cursor: pointer;"> התנגשות של בחינות באותו יום</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule2" checked onchange="runOptimization()"
+                            style="cursor: pointer;"> 3 בחינות ברצף (ללא שבתות)</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rule3" checked onchange="runOptimization()"
+                            style="cursor: pointer;"> 4 בחינות בשבוע</label>
                 </div>
 
                 <div class="control-group">
@@ -65,20 +84,6 @@
                 </div>
             </div>
         </details>
-
-        <div
-            style="background-color: var(--cell-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <div class="control-group">
-                <label>סמסטר פעיל</label>
-                <select id="profileSelect" onchange="switchProfile(this.value)" style="cursor: pointer;"></select>
-            </div>
-            <div class="form-actions" style="margin-top: 10px;">
-                <button class="btn-primary" onclick="promptNewProfile()" style="font-size: 0.85rem;">+ סמסטר
-                    חדש</button>
-                <button class="btn-secondary" onclick="deleteCurrentProfile()"
-                    style="font-size: 0.85rem; color: var(--accent-rose);">מחק</button>
-            </div>
-        </div>
 
         <div class="course-management">
             <h3>הקורסים שלי</h3>
@@ -134,6 +139,7 @@
         </div>
     </main>
 
+    <!-- Add/Edit Course popup modal -->
     <dialog id="courseModal" class="modal">
         <div class="modal-header">
             <h3 id="modalTitle">פרטי קורס</h3>
@@ -151,6 +157,22 @@
                 <label class="small-label" style="margin-top: 8px;">תאריך מועד ב'</label>
                 <input type="date" id="courseDateB" required>
                 <label class="checkbox-label small-label"><input type="checkbox" id="forceB"> חובה לגשת למועד ב'</label>
+
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                    <label class="checkbox-label small-label" style="color: var(--success); font-weight: bold;">
+                        <input type="checkbox" id="skipB" onchange="handleSkipBToggle(this)">
+                        ציון מספק במועד א' (אין צורך במועדי ב' / ג')
+                    </label>
+                </div>
+
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                    <label class="small-label" style="font-weight: bold;">סמסטרים בהם הקורס נלמד:</label>
+                    <div style="display: flex; gap: 15px; margin-top: 8px;">
+                        <label class="checkbox-label small-label"><input type="checkbox" id="offeredA"> א'</label>
+                        <label class="checkbox-label small-label"><input type="checkbox" id="offeredB"> ב'</label>
+                        <label class="checkbox-label small-label"><input type="checkbox" id="offeredElul"> אלול</label>
+                    </div>
+                </div>
             </div>
             <div class="form-actions" style="margin-top: 20px;">
                 <button type="submit" id="btnSubmitCourse" class="btn-primary">שמור קורס</button>
@@ -158,6 +180,7 @@
         </form>
     </dialog>
 
+    <script src="resources/scripts/profiles.js"></script>
     <script src="resources/scripts/defaults.js"></script>
     <script src="resources/scripts/engine.js"></script>
     <script src="resources/scripts/app.js"></script>

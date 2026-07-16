@@ -14,35 +14,30 @@ document.getElementById('themeToggle').value = savedTheme;
 setTheme(savedTheme);
 
 
-// --- LocalStorage & Profiles ---
-
+// --- Local Storage Managment ---
 function initStorage() {
+    let storedData = null;
     try {
         const stored = localStorage.getItem('examSchedulerData');
-        if (stored) {
-            const data = JSON.parse(stored);
-            profiles = data.profiles || [];
-            activeProfileId = data.activeProfileId;
-        }
-    } catch (e) {
-        console.error('שגיאה בטעינת הנתונים:', e);
-    }
+        if (stored) storedData = JSON.parse(stored);
+    } catch (e) { console.error('שגיאה בטעינת הנתונים:', e); }
 
-    // Initiate a default profile if there are none
-    if (profiles.length === 0) {
-        const defId = 'p_' + Date.now();
-        profiles = [{
-            id: defId,
-            name: 'סמסטר ברירת מחדל',
+    // Initialization of 12 profiles
+    if (!storedData || !storedData.profiles || storedData.profiles.length !== 12 || !storedData.profiles.find(p => p.id === 'y1_s0')) {
+        profiles = FIXED_PROFILES.map(fp => ({
+            id: fp.id,
+            name: fp.name,
+            type: fp.type,
             exams: [],
             settings: null
-        }];
-        activeProfileId = defId;
+        }));
+        activeProfileId = 'y1_s0';
+    } else {
+        profiles = storedData.profiles;
+        activeProfileId = storedData.activeProfileId;
     }
 
-    if (!profiles.find(p => p.id === activeProfileId)) {
-        activeProfileId = profiles[0].id;
-    }
+    if (!profiles.find(p => p.id === activeProfileId)) activeProfileId = profiles[0].id;
 
     updateProfileSelectUI();
     loadActiveProfile();
@@ -54,6 +49,8 @@ function saveToStorage() {
         activeProfile.exams = currentExams;
         activeProfile.settings = {
             strategy: document.getElementById('strategy').value,
+            prioritizeCloseC: document.getElementById('prioritizeCloseC').checked,
+            allowDoubleSkip: document.getElementById('allowDoubleSkip').checked,
             rule1: document.getElementById('rule1').checked,
             rule2: document.getElementById('rule2').checked,
             rule3: document.getElementById('rule3').checked,
@@ -63,13 +60,8 @@ function saveToStorage() {
     }
 
     try {
-        localStorage.setItem('examSchedulerData', JSON.stringify({
-            profiles: profiles,
-            activeProfileId: activeProfileId
-        }));
-    } catch (e) {
-        console.error('שגיאה בשמירת הנתונים:', e);
-    }
+        localStorage.setItem('examSchedulerData', JSON.stringify({ profiles, activeProfileId }));
+    } catch (e) { console.error('שגיאה בשמירת הנתונים:', e); }
 }
 
 function updateProfileSelectUI() {
@@ -89,82 +81,70 @@ function loadActiveProfile() {
     const activeProfile = profiles.find(p => p.id === activeProfileId);
     if (activeProfile) {
         currentExams = activeProfile.exams || [];
-
-        // Load the saved configurations from LocalStorage (if exist)
         if (activeProfile.settings) {
             document.getElementById('strategy').value = activeProfile.settings.strategy || 'spacing';
+            document.getElementById('prioritizeCloseC').checked = activeProfile.settings.prioritizeCloseC !== false;
+            document.getElementById('allowDoubleSkip').checked = activeProfile.settings.allowDoubleSkip === true;
             document.getElementById('rule1').checked = activeProfile.settings.rule1 !== false;
             document.getElementById('rule2').checked = activeProfile.settings.rule2 !== false;
             document.getElementById('rule3').checked = activeProfile.settings.rule3 !== false;
-
             document.getElementById('maxC').value = activeProfile.settings.maxC !== undefined ? activeProfile.settings.maxC : 10;
             document.getElementById('maxVal').innerText = document.getElementById('maxC').value;
-
             document.getElementById('minC').value = activeProfile.settings.minC !== undefined ? activeProfile.settings.minC : 0;
             document.getElementById('minVal').innerText = document.getElementById('minC').value;
+        } else {
+            // Default Configurations
+            document.getElementById('strategy').value = 'spacing';
+            document.getElementById('prioritizeCloseC').checked = true;
+            document.getElementById('allowDoubleSkip').checked = false;
+            document.getElementById('rule1').checked = true;
+            document.getElementById('rule2').checked = true;
+            document.getElementById('rule3').checked = true;
+            document.getElementById('maxC').value = 10;
+            document.getElementById('maxVal').innerText = '10';
+            document.getElementById('minC').value = 0;
+            document.getElementById('minVal').innerText = '0';
         }
     }
     updateCourseListUI();
     runOptimization();
 }
 
-function switchProfile(id) {
-    saveToStorage();
-    activeProfileId = id;
-    loadActiveProfile();
-}
-
-function promptNewProfile() {
-    const name = prompt('הכנס שם לסמסטר החדש (למשל: סמסטר א\' תשפ"ו):');
-    if (!name || name.trim() === '') return;
-
-    saveToStorage();
-
-    const newId = 'p_' + Date.now();
-    profiles.push({
-        id: newId,
-        name: name.trim(),
-        exams: [],
-        settings: null
-    });
-
-    activeProfileId = newId;
-    updateProfileSelectUI();
-    loadActiveProfile();
-}
-
-function deleteCurrentProfile() {
-    if (profiles.length <= 1) {
-        alert('לא ניתן למחוק את הסמסטר היחיד. במקום זאת, תוכל למחוק את הקורסים בתוכו או ליצור סמסטר חדש קודם.');
-        return;
-    }
-
-    if (confirm('האם אתה בטוח שברצונך למחוק את הסמסטר הזה ואת כל הקורסים שבו?')) {
-        profiles = profiles.filter(p => p.id !== activeProfileId);
-        activeProfileId = profiles[0].id;
-        updateProfileSelectUI();
-        loadActiveProfile();
-    }
-}
+function switchProfile(id) { saveToStorage(); activeProfileId = id; loadActiveProfile(); }
 
 
 // --- Popup Modal Managment ---
 const courseModal = document.getElementById('courseModal');
 
+function handleSkipBToggle(cb) {
+    const fA = document.getElementById('forceA');
+    const fB = document.getElementById('forceB');
+    if (cb.checked) {
+        fA.checked = false; fB.checked = false;
+        fA.disabled = true; fB.disabled = true;
+    } else {
+        fA.disabled = false; fB.disabled = false;
+    }
+}
+
 function openCourseModal() {
     document.getElementById('courseForm').reset();
     document.getElementById('editCourseId').value = '';
+
+    document.getElementById('offeredA').checked = true;
+    document.getElementById('offeredB').checked = true;
+    document.getElementById('offeredElul').checked = false;
+
     document.getElementById('modalTitle').innerText = 'הוסף קורס חדש';
     document.getElementById('btnSubmitCourse').innerText = 'שמור קורס';
+    handleSkipBToggle(document.getElementById('skipB'));
     courseModal.showModal();
 }
 
-function closeCourseModal() {
-    courseModal.close();
-}
+function closeCourseModal() { courseModal.close(); }
 
 
-// --- Courses Managment (CRUD) ---
+// --- Courses Managment ---
 function handleCourseSubmit(e) {
     e.preventDefault();
     const idField = document.getElementById('editCourseId').value;
@@ -173,17 +153,22 @@ function handleCourseSubmit(e) {
     const b = document.getElementById('courseDateB').value;
     const forceA = document.getElementById('forceA').checked;
     const forceB = document.getElementById('forceB').checked;
+    const skipB = document.getElementById('skipB').checked;
+
+    const offeredA = document.getElementById('offeredA').checked;
+    const offeredB = document.getElementById('offeredB').checked;
+    const offeredElul = document.getElementById('offeredElul').checked;
 
     if (idField) {
         const index = currentExams.findIndex(ex => ex.id === idField);
-        if (index > -1) currentExams[index] = { id: idField, name, a, b, forceA, forceB };
+        if (index > -1) currentExams[index] = { id: idField, name, a, b, forceA, forceB, skipB, offeredA, offeredB, offeredElul };
     } else {
         const newId = 'C_' + Date.now();
         const existingIndex = currentExams.findIndex(ex => ex.name === name);
         if (existingIndex > -1) {
-            currentExams[existingIndex] = { id: currentExams[existingIndex].id, name, a, b, forceA, forceB };
+            currentExams[existingIndex] = { id: currentExams[existingIndex].id, name, a, b, forceA, forceB, skipB, offeredA, offeredB, offeredElul };
         } else {
-            currentExams.push({ id: newId, name, a, b, forceA, forceB });
+            currentExams.push({ id: newId, name, a, b, forceA, forceB, skipB, offeredA, offeredB, offeredElul });
         }
     }
 
@@ -200,8 +185,15 @@ function editCourse(id) {
     document.getElementById('courseName').value = course.name;
     document.getElementById('courseDateA').value = course.a;
     document.getElementById('courseDateB').value = course.b;
-    document.getElementById('forceA').checked = course.forceA;
-    document.getElementById('forceB').checked = course.forceB;
+    document.getElementById('forceA').checked = course.forceA || false;
+    document.getElementById('forceB').checked = course.forceB || false;
+    document.getElementById('skipB').checked = course.skipB || false;
+
+    document.getElementById('offeredA').checked = course.offeredA !== false;
+    document.getElementById('offeredB').checked = course.offeredB !== false;
+    document.getElementById('offeredElul').checked = course.offeredElul || false;
+
+    handleSkipBToggle(document.getElementById('skipB'));
 
     document.getElementById('modalTitle').innerText = 'ערוך קורס';
     document.getElementById('btnSubmitCourse').innerText = 'עדכן קורס';
@@ -233,11 +225,23 @@ function updateCourseListUI() {
     currentExams.forEach(course => {
         const div = document.createElement('div');
         div.className = 'course-item';
+
+        let tags = '';
+        if (course.skipB) tags = `<span class="dates" style="color:var(--success)">סיים במועד א'</span>`;
+        else if (course.forceA || course.forceB) tags = `<span class="dates" style="color:var(--accent-rose)">אילוץ: ${course.forceA ? "א' " : ""}${course.forceB ? "ב'" : ""}</span>`;
+
+        let availability = [];
+        if (course.offeredA) availability.push("א'");
+        if (course.offeredB) availability.push("ב'");
+        if (course.offeredElul) availability.push("אלול");
+        let availStr = availability.length > 0 ? `זמין ב: ${availability.join(", ")}` : "לא זמין!";
+
         div.innerHTML = `
             <div class="course-info">
                 <strong>${course.name}</strong>
                 <span class="dates">א': ${course.a} | ב': ${course.b}</span>
-                ${course.forceA || course.forceB ? `<span class="dates" style="color:var(--accent-rose)">אילוץ: ${course.forceA ? "מועד א " : ""}${course.forceB ? "מועד ב" : ""}</span>` : ''}
+                <span class="dates" style="color: var(--text-muted)">${availStr}</span>
+                ${tags}
             </div>
             <div class="course-actions">
                 <button onclick="editCourse('${course.id}')" title="ערוך">✏️</button>
@@ -249,9 +253,8 @@ function updateCourseListUI() {
 }
 
 
-// --- Integration with the Optimization Engine & Auto Save ---
+// --- Algorithm Integration ---
 function runOptimization() {
-    // Auto save at every run for possible changes
     saveToStorage();
 
     if (currentExams.length === 0) {
@@ -261,8 +264,14 @@ function runOptimization() {
         return;
     }
 
+    const activeProfile = profiles.find(p => p.id === activeProfileId);
+    const semType = activeProfile ? activeProfile.type : 0;
+
     const settings = {
+        currentSemester: semType,
         strategy: document.getElementById('strategy').value,
+        prioritizeCloseC: document.getElementById('prioritizeCloseC').checked,
+        allowDoubleSkip: document.getElementById('allowDoubleSkip').checked,
         rule1: document.getElementById('rule1').checked,
         rule2: document.getElementById('rule2').checked,
         rule3: document.getElementById('rule3').checked,
@@ -288,13 +297,29 @@ function renderScheduleTable(schedule) {
     schedule.forEach(item => {
         const tr = document.createElement('tr');
 
-        let textA = `<span class="badge-attend">חייב לגשת</span>`;
-        if (item.opt === 2) textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
+        let textA, textB, textC;
 
-        let textB = `<span class="badge-attend">חייב לגשת</span>`;
-        if (item.opt === 1) textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
+        if (item.opt === 3) {
+            textA = `<span class="badge-attend" style="color: var(--success)">הושלם בהצלחה</span>`;
+            textB = `<span style="color: var(--text-muted)">לא נדרש</span>`;
+            textC = `<span style="color: var(--text-muted)">-</span>`;
+        } else if (item.opt === 4) {
+            textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
+            textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
+            textC = `<span class="icon-check">✅</span><span class="reasoning" style="color: var(--primary-blue)">ב${item.nextMoedC}</span>`;
+        } else {
+            textA = `<span class="badge-attend">חייב לגשת</span>`;
+            if (item.opt === 2) textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
 
-        let textC = (item.opt === 1 || item.opt === 2) ? `<span class="icon-check">✅</span>` : `<span class="icon-cross">❌</span>`;
+            textB = `<span class="badge-attend">חייב לגשת</span>`;
+            if (item.opt === 1) textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
+
+            if (item.opt === 1 || item.opt === 2) {
+                textC = `<span class="icon-check">✅</span><span class="reasoning" style="color: var(--primary-blue)">ב${item.nextMoedC}</span>`;
+            } else {
+                textC = `<span class="icon-cross">❌</span>`;
+            }
+        }
 
         tr.innerHTML = `
             <td style="font-weight: 500;">${item.course.name}</td>
@@ -305,7 +330,6 @@ function renderScheduleTable(schedule) {
         tbody.appendChild(tr);
     });
 }
-
 
 // --- Dynamic Calendar ---
 function renderDynamicCalendar(schedule) {
@@ -323,7 +347,8 @@ function renderDynamicCalendar(schedule) {
         if (dA > maxDate) maxDate = dA;
         let dateStrA = dA.toISOString().split('T')[0];
         if (!events[dateStrA]) events[dateStrA] = [];
-        let isAttendedA = (item.opt === 0 || item.opt === 1);
+
+        let isAttendedA = (item.opt === 0 || item.opt === 1 || item.opt === 3);
         events[dateStrA].push({ name: item.course.name, type: 'moed-a', label: "מועד א'", attended: isAttendedA });
 
         let dB = new Date(item.course.b);
@@ -331,8 +356,10 @@ function renderDynamicCalendar(schedule) {
         if (dB > maxDate) maxDate = dB;
         let dateStrB = dB.toISOString().split('T')[0];
         if (!events[dateStrB]) events[dateStrB] = [];
+
         let isAttendedB = (item.opt === 0 || item.opt === 2);
-        events[dateStrB].push({ name: item.course.name, type: 'moed-b', label: "מועד ב'", attended: isAttendedB });
+        let labelB = (item.opt === 3) ? "מועד ב' (לא נדרש)" : "מועד ב'";
+        events[dateStrB].push({ name: item.course.name, type: 'moed-b', label: labelB, attended: isAttendedB });
     });
 
     if (minDate > maxDate) return;
@@ -349,7 +376,6 @@ function renderDynamicCalendar(schedule) {
     let currM = startMonth;
 
     while (currY < endYear || (currY === endYear && currM <= endMonth)) {
-
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month-container';
 
@@ -397,10 +423,8 @@ function renderDynamicCalendar(schedule) {
                     evDiv.className = `exam-event ${ev.type} ${skippedClass}`;
                     evDiv.innerText = `${ev.name} (${ev.label})`;
                     cell.appendChild(evDiv);
-
                     if (ev.attended) hasAttended = true;
                 });
-
                 if (hasAttended) cell.style.borderColor = 'rgba(65, 105, 225, 0.4)';
             }
             grid.appendChild(cell);
@@ -410,13 +434,9 @@ function renderDynamicCalendar(schedule) {
         container.appendChild(monthDiv);
 
         currM++;
-        if (currM > 11) {
-            currM = 0;
-            currY++;
-        }
+        if (currM > 11) { currM = 0; currY++; }
     }
 }
-
 
 // --- Calendar Export ---
 function exportICS() {
@@ -427,7 +447,7 @@ function exportICS() {
         let dateA = new Date(item.course.a);
         let dateB = new Date(item.course.b);
 
-        if (item.opt === 0 || item.opt === 1) ics += generateICSEvent(item.course.name + " - מועד א'", dateA);
+        if (item.opt === 0 || item.opt === 1 || item.opt === 3) ics += generateICSEvent(item.course.name + " - מועד א'", dateA);
         if (item.opt === 0 || item.opt === 2) ics += generateICSEvent(item.course.name + " - מועד ב'", dateB);
     });
 
@@ -448,7 +468,7 @@ function generateICSEvent(title, dateObj) {
     return `BEGIN:VEVENT\nSUMMARY:${title}\nDTSTART;VALUE=DATE:${dateStr}\nDTEND;VALUE=DATE:${dateStr}\nEND:VEVENT\n`;
 }
 
-// --- Sidebar Managment (Collapsion & Expansion)
+// --- Side Panel Managment ---
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('collapsed');
@@ -456,9 +476,10 @@ function toggleSidebar() {
     localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
 }
 
-// --- Load up the sidebar at startup ---
 if (localStorage.getItem('sidebarCollapsed') === 'true') {
     document.querySelector('.sidebar').classList.add('collapsed');
     document.body.classList.add('sidebar-closed');
 }
+
+// Startup Call
 initStorage();
