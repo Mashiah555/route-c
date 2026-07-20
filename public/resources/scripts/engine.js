@@ -12,11 +12,11 @@ function getWorkingDaysDiff(t1, t2) {
     return diff;
 }
 
-function getAttendedPenalty(dates) {
+function getAttendedPenalty(attendedObjs) {
     let penalty = 0;
-    let sorted = [...dates].sort((a, b) => a - b);
+    let sorted = [...attendedObjs].sort((a, b) => a.date - b.date);
     for (let i = 0; i < sorted.length - 1; i++) {
-        let diff = getWorkingDaysDiff(sorted[i], sorted[i + 1]);
+        let diff = getWorkingDaysDiff(sorted[i].date, sorted[i + 1].date);
         if (diff === 0) penalty += 10000000;
         else if (diff === 1) penalty += 10000;
         else if (diff === 2) penalty += 500;
@@ -28,14 +28,18 @@ function getAttendedPenalty(dates) {
 function isValidAbsence(targetDate, attendedDates, r1, r2, r3) {
     if (r1) {
         for (let d of attendedDates) {
-            if (getWorkingDaysDiff(targetDate, d) === 0) return { valid: true, reason: 'בחינה נוספת מתקיימת באותו היום.' };
+            if (getWorkingDaysDiff(targetDate, d.date) === 0) {
+                return { valid: true, reason: 'בחינה נוספת מתקיימת באותו היום', justifiers: [d] };
+            }
         }
     }
     if (r2 && attendedDates.length >= 2) {
         for (let i = 0; i < attendedDates.length; i++) {
             for (let j = i + 1; j < attendedDates.length; j++) {
-                let dates = [targetDate, attendedDates[i], attendedDates[j]].sort((a, b) => a - b);
-                if (getWorkingDaysDiff(dates[0], dates[2]) <= 2) return { valid: true, reason: 'עומס של 3 בחינות ב-3 ימי עבודה רצופים.' };
+                let dates = [{ date: targetDate }, attendedDates[i], attendedDates[j]].sort((a, b) => a.date - b.date);
+                if (getWorkingDaysDiff(dates[0].date, dates[2].date) <= 2) {
+                    return { valid: true, reason: 'עומס של 3 בחינות ב-3 ימי עבודה רצופים', justifiers: [attendedDates[i], attendedDates[j]] };
+                }
             }
         }
     }
@@ -43,8 +47,10 @@ function isValidAbsence(targetDate, attendedDates, r1, r2, r3) {
         for (let i = 0; i < attendedDates.length; i++) {
             for (let j = i + 1; j < attendedDates.length; j++) {
                 for (let k = j + 1; k < attendedDates.length; k++) {
-                    let dates = [targetDate, attendedDates[i], attendedDates[j], attendedDates[k]].sort((a, b) => a - b);
-                    if (getWorkingDaysDiff(dates[0], dates[3]) <= 6) return { valid: true, reason: 'עומס של 4 בחינות ב-7 ימי עבודה.' };
+                    let dates = [{ date: targetDate }, attendedDates[i], attendedDates[j], attendedDates[k]].sort((a, b) => a.date - b.date);
+                    if (getWorkingDaysDiff(dates[0].date, dates[3].date) <= 6) {
+                        return { valid: true, reason: 'עומס של 4 בחינות ב-7 ימי עבודה', justifiers: [attendedDates[i], attendedDates[j], attendedDates[k]] };
+                    }
                 }
             }
         }
@@ -118,28 +124,30 @@ function calculateEngine(exams, settings) {
             const timeA = new Date(exams[j].a).getTime();
             const timeB = new Date(exams[j].b).getTime();
 
+            let objA = { date: timeA, id: exams[j].id, name: exams[j].name };
+            let objB = { date: timeB, id: exams[j].id, name: exams[j].name };
+
             if (opt === 0) {
-                attendedA.push(timeA);
-                attendedB.push(timeB);
+                attendedA.push(objA);
+                attendedB.push(objB);
             } else if (opt === 1) {
-                attendedA.push(timeA);
-                missedB.push({ date: timeB, id: exams[j].id });
+                attendedA.push(objA);
+                missedB.push(objB);
                 cCount++;
             } else if (opt === 2) {
-                missedA.push({ date: timeA, id: exams[j].id });
-                attendedB.push(timeB);
+                missedA.push(objA);
+                attendedB.push(objB);
                 cCount++;
             } else if (opt === 3) {
-                attendedA.push(timeA);
+                attendedA.push(objA);
             } else if (opt === 4) {
-                // Double exam skip 
-                missedA.push({ date: timeA, id: exams[j].id });
-                missedB.push({ date: timeB, id: exams[j].id });
+                missedA.push(objA);
+                missedB.push(objB);
                 cCount++;
             }
 
             let nextMoedC = (opt === 1 || opt === 2 || opt === 4) ? getNextSemesterName(exams[j], currSem) : null;
-            schedule.push({ course: exams[j], opt, reasonA: null, reasonB: null, nextMoedC });
+            schedule.push({ course: exams[j], opt, reasonA: null, reasonB: null, nextMoedC, justifiesA: [], justifiesB: [] });
         }
 
         if (cCount > settings.maxC || cCount < settings.minC) continue;
@@ -149,16 +157,36 @@ function calculateEngine(exams, settings) {
         // Validate all moed A absences 
         for (let miss of missedA) {
             let check = isValidAbsence(miss.date, attendedA, settings.rule1, settings.rule2, settings.rule3);
-            if (!check.valid) { isValid = false; break; }
+            if (!check.valid) {
+                isValid = false; break;
+            }
             schedule.find(s => s.course.id === miss.id).reasonA = check.reason;
+
+            // Documents the courses that are required for the justification
+            if (check.justifiers) {
+                check.justifiers.forEach(justifier => {
+                    let sItem = schedule.find(s => s.course.id === justifier.id);
+                    if (sItem && !sItem.justifiesA.includes(miss.name)) sItem.justifiesA.push(miss.name);
+                });
+            }
         }
 
         if (isValid) {
             // Validate all moed B absences
             for (let miss of missedB) {
                 let check = isValidAbsence(miss.date, attendedB, settings.rule1, settings.rule2, settings.rule3);
-                if (!check.valid) { isValid = false; break; }
+                if (!check.valid) {
+                    isValid = false; break;
+                }
                 schedule.find(s => s.course.id === miss.id).reasonB = check.reason;
+
+                // Documents the courses that are required for the justification
+                if (check.justifiers) {
+                    check.justifiers.forEach(justifier => {
+                        let sItem = schedule.find(s => s.course.id === justifier.id);
+                        if (sItem && !sItem.justifiesB.includes(miss.name)) sItem.justifiesB.push(miss.name);
+                    });
+                }
             }
         }
 

@@ -227,19 +227,19 @@ function updateCourseListUI() {
         div.className = 'course-item';
 
         let tags = '';
-        if (course.skipB) tags = `<span class="dates" style="color:var(--success)">סיים במועד א'</span>`;
+        if (course.skipB) tags = `<span class="dates" style="color:var(--success)">עבר במועד א'</span>`;
         else if (course.forceA || course.forceB) tags = `<span class="dates" style="color:var(--accent-rose)">אילוץ: ${course.forceA ? "א' " : ""}${course.forceB ? "ב'" : ""}</span>`;
 
         let availability = [];
         if (course.offeredA) availability.push("א'");
         if (course.offeredB) availability.push("ב'");
         if (course.offeredElul) availability.push("אלול");
-        let availStr = availability.length > 0 ? `זמין ב: ${availability.join(", ")}` : "לא זמין!";
+        let availStr = availability.length > 0 ? `זמין בסמסטר ${availability.join("+")}` : "לא זמין!";
 
         div.innerHTML = `
             <div class="course-info">
                 <strong>${course.name}</strong>
-                <span class="dates">א': ${course.a} | ב': ${course.b}</span>
+                <span class="dates">א': ${formatDate(course.a)} | ב': ${formatDate(course.b)}</span>
                 <span class="dates" style="color: var(--text-muted)">${availStr}</span>
                 ${tags}
             </div>
@@ -285,6 +285,41 @@ function runOptimization() {
     renderDynamicCalendar(result);
 }
 
+function getAttendText(justifies, isOpt3, examDateStr) {
+    if (justifies && justifies.length > 0) {
+        // The attendance is required for the justification of another course
+        let html = '';
+        if (isOpt3) {
+            html += `<span class="badge-attend" style="color: var(--success)">ציון עובר</span>`;
+        } else {
+            html += `<span class="badge-attend" style="color: var(--accent-rose)">חייב לגשת</span>`;
+        }
+        html += `<span class="reasoning" style="color: var(--text-muted)">מצדיק מועד ג' ל${justifies.join(', ')}</span>`;
+        return html;
+    } else {
+        // The attendance is not required by the constrains of other courses (יכול לגשת / ניגש / עובר)
+
+        if (isOpt3) {
+            return `<span class="badge-attend" style="color: var(--success)">ציון עובר</span>`;
+        }
+
+        let today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let examDate = new Date(examDateStr);
+        examDate.setHours(0, 0, 0, 0);
+
+        if (examDate < today) {
+            return `<span class="badge-attend" style="color: var(--primary-blue)">ניגש</span>`;
+        } else {
+            return `<span class="badge-attend" style="color: var(--primary-blue)">יכול לגשת</span>`;
+        }
+    }
+}
+
+function formatDate(date) {
+    return date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1');
+}
+
 function renderScheduleTable(schedule) {
     const tbody = document.getElementById('resultsBody');
     tbody.innerHTML = '';
@@ -299,21 +334,28 @@ function renderScheduleTable(schedule) {
 
         let textA, textB, textC;
 
-        if (item.opt === 3) {
-            textA = `<span class="badge-attend" style="color: var(--success)">הושלם בהצלחה</span>`;
-            textB = `<span style="color: var(--text-muted)">לא נדרש</span>`;
-            textC = `<span style="color: var(--text-muted)">-</span>`;
-        } else if (item.opt === 4) {
+        if (item.opt === 4) {
             textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
             textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
             textC = `<span class="icon-check">✅</span><span class="reasoning" style="color: var(--primary-blue)">ב${item.nextMoedC}</span>`;
         } else {
-            textA = `<span class="badge-attend">חייב לגשת</span>`;
-            if (item.opt === 2) textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
+            // Moed A
+            if (item.opt === 0 || item.opt === 1 || item.opt === 3) {
+                textA = getAttendText(item.justifiesA, item.opt === 3, item.course.a);
+            } else {
+                textA = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonA}</span>`;
+            }
 
-            textB = `<span class="badge-attend">חייב לגשת</span>`;
-            if (item.opt === 1) textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
+            // Moed B
+            if (item.opt === 3) {
+                textB = `<span style="color: var(--text-muted)">לא נדרש</span>`;
+            } else if (item.opt === 0 || item.opt === 2) {
+                textB = getAttendText(item.justifiesB, false, item.course.b);
+            } else {
+                textB = `<span class="badge-absence">היעדרות מוצדקת</span><span class="reasoning">${item.reasonB}</span>`;
+            }
 
+            // Moed C
             if (item.opt === 1 || item.opt === 2) {
                 textC = `<span class="icon-check">✅</span><span class="reasoning" style="color: var(--primary-blue)">ב${item.nextMoedC}</span>`;
             } else {
