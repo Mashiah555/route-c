@@ -280,9 +280,9 @@ function runOptimization() {
     };
 
     const result = calculateEngine(currentExams, settings);
-    currentBestSchedule = result;
-    renderScheduleTable(result);
-    renderDynamicCalendar(result);
+    currentBestSchedule = result.schedule;
+    renderScheduleTable(result.schedule, result.errors);
+    renderDynamicCalendar(result.schedule);
 }
 
 function getAttendText(justifies, isOpt3, examDateStr) {
@@ -320,12 +320,22 @@ function formatDate(date) {
     return date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1');
 }
 
-function renderScheduleTable(schedule) {
+function renderScheduleTable(schedule, errors = []) {
     const tbody = document.getElementById('resultsBody');
     tbody.innerHTML = '';
 
+    // Display the errors in case all combinations failed
     if (!schedule) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">לא נמצא סידור חוקי העונה על ההגדרות והאילוצים</td></tr>';
+        let errorHtml = '<div style="color: var(--accent-rose); text-align: right; padding: 15px; border-radius: 8px; background: var(--cell-bg);">';
+        errorHtml += '<h3 style="margin-top: 0; margin-bottom: 10px;">לא קיים פתרון אפשרי שעונה לדרישות שהגדרת</h3>';
+        errorHtml += '<p style="margin-top: 0; margin-bottom: 10px; color: var(--text-main);">האלגוריתם פסל את כל הקומבינציות האפשריות מהסיבות הבאות:</p>';
+
+        errors.forEach(e => errorHtml += `<div style="margin-bottom: 5px;">${e}</div>`);
+
+        errorHtml += '<p style="margin-top: 15px; margin-bottom: 0; color: var(--text-muted); font-size: 0.9em;">💡 טיפ: נסה לשנות את האילוצים שסימנת בקורסים, לאפשר כמות מועדי ג\' שונה, או לאפשר חוקי הצדקה נוספים בתפריט.</p>';
+        errorHtml += '</div>';
+
+        tbody.innerHTML = `<tr><td colspan="4">${errorHtml}</td></tr>`;
         return;
     }
 

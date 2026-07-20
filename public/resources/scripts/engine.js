@@ -90,11 +90,15 @@ function cartesianProduct(arr) {
 }
 
 function calculateEngine(exams, settings) {
-    if (exams.length === 0) return null;
+    if (exams.length === 0) return { schedule: null, errors: [] };
 
     let bestSchedule = null;
     let bestScore = -Infinity;
     const currSem = parseInt(settings.currentSemester) || 0;
+
+    // Tracking of combinations that raise errors
+    let errorsTracker = { maxC: 0, minC: 0, overlap: 0, justification: 0 };
+    let specificOverlaps = new Set();
 
     const coursesOptions = exams.map(exam => {
         let opts = [];
@@ -110,6 +114,17 @@ function calculateEngine(exams, settings) {
     });
 
     const combinations = cartesianProduct(coursesOptions);
+
+    // Helper function for checking exams overlap the same day
+    function checkOverlap(attended) {
+        let sorted = [...attended].sort((a, b) => a.date - b.date);
+        for (let i = 0; i < sorted.length - 1; i++) {
+            if (getWorkingDaysDiff(sorted[i].date, sorted[i + 1].date) === 0) {
+                return `"${sorted[i].name}" ו-"${sorted[i + 1].name}"`;
+            }
+        }
+        return null;
+    }
 
     for (let combo of combinations) {
         let cCount = 0;
@@ -150,7 +165,17 @@ function calculateEngine(exams, settings) {
             schedule.push({ course: exams[j], opt, reasonA: null, reasonB: null, nextMoedC, justifiesA: [], justifiesB: [] });
         }
 
-        if (cCount > settings.maxC || cCount < settings.minC) continue;
+        if (cCount > settings.maxC) { errorsTracker.maxC++; continue; }
+        if (cCount < settings.minC) { errorsTracker.minC++; continue; }
+
+        let overA = checkOverlap(attendedA);
+        let overB = checkOverlap(attendedB);
+        if (overA || overB) {
+            errorsTracker.overlap++;
+            if (overA) specificOverlaps.add(`מועד א' (${overA})`);
+            if (overB) specificOverlaps.add(`מועד ב' (${overB})`);
+            continue;
+        }
 
         let isValid = true;
 
@@ -190,29 +215,44 @@ function calculateEngine(exams, settings) {
             }
         }
 
-        if (isValid) {
-            let penalty = getAttendedPenalty(attendedA) + getAttendedPenalty(attendedB);
+        if (!isValid) {
+            errorsTracker.justification++;
+            continue; // פוסל את הקומבינציה
+        }
 
-            if (settings.prioritizeCloseC) {
-                for (let item of schedule) {
-                    if (item.opt === 1 || item.opt === 2 || item.opt === 4) {
-                        penalty += getDistancePenalty(item.course, currSem);
-                    }
+        // Any combination at this point is valid, hence the penalty score can be calculated
+        let penalty = getAttendedPenalty(attendedA) + getAttendedPenalty(attendedB);
+
+        if (settings.prioritizeCloseC) {
+            for (let item of schedule) {
+                if (item.opt === 1 || item.opt === 2 || item.opt === 4) {
+                    penalty += getDistancePenalty(item.course, currSem);
                 }
             }
+        }
 
-            let score = 0;
-            if (settings.strategy === 'spacing') {
-                score = -penalty - cCount;
-            } else {
-                score = (cCount * 500000) - penalty;
-            }
+        let score = 0;
+        if (settings.strategy === 'spacing') {
+            score = -penalty - cCount;
+        } else {
+            score = (cCount * 500000) - penalty;
+        }
 
-            if (score > bestScore) {
-                bestScore = score;
-                bestSchedule = schedule;
-            }
+        if (score > bestScore) {
+            bestScore = score;
+            bestSchedule = schedule;
         }
     }
-    return bestSchedule;
+
+    // Record the errors tracked in case all combinations failed
+    let errorsList = [];
+    if (!bestSchedule) {
+        if (errorsTracker.overlap > 0) errorsList.push(`• חפיפת בחינות באותו היום שהפכה לבלתי נמנעת: <strong>${Array.from(specificOverlaps).join(', ')}</strong>.`);
+        if (errorsTracker.maxC > 0) errorsList.push(`• חריגה ממקסימום מועדי ג' שהגדרת (${settings.maxC}).`);
+        if (errorsTracker.minC > 0) errorsList.push(`• לא הושג מינימום מועדי ג' שהגדרת (${settings.minC}).`);
+        if (errorsTracker.justification > 0) errorsList.push(`• לא נמצאו מספיק מבחנים אחרים כדי להצדיק את כל ההיעדרויות הנדרשות לפי החוקים הפעילים.`);
+        if (errorsList.length === 0) errorsList.push(`• אילוצים סותרים או לא הגיוניים שמנעו יצירת לוח זמנים (בדוק את כמות ה-"חובה לגשת").`);
+    }
+
+    return { schedule: bestSchedule, errors: errorsList };
 }
